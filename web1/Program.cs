@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Web1.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,11 +9,16 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-//options => options.UseSqlServer(Configuration.GetConnectionString("BackOfficeDBConnection"))
+
 builder.Services.AddDbContext<ProductContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ProductDb"));
-});
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("ProductDb"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure()
+    )
+);
+
+builder.Services.AddScoped<ProductContext>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

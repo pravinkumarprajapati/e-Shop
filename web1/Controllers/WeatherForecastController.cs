@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Web1.Data;
+using Web1.Model;
 
 namespace web1.Controllers;
 
@@ -6,27 +9,28 @@ namespace web1.Controllers;
 [Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+      
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly ProductContext _productContext;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, ProductContext productContext )
     {
         _logger = logger;
+        _productContext = productContext;
     }
-
-    [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
+    [HttpGet]
+    public async Task<IEnumerable<Product>> GetAllProducts()
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        try
         {
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
-    }
+            _logger.LogInformation("Fetching all products from database.");
+            return await _productContext.Products.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching all products.");
+            throw new Exception("Failed to retrieve products.", ex);
+        }
+    }     
 }
